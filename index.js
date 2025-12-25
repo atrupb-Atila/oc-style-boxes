@@ -1,4 +1,5 @@
 // OC Style Boxes - Simple JSON to styled HTML transformer
+console.log('[OC Style Boxes] Script file loaded');
 
 (function() {
     // ============================================
@@ -68,10 +69,14 @@
         
         // Method 1: Look for <pre><code class="language-XXX">
         messageElement.querySelectorAll('pre code').forEach(code => {
-            // Check class name (e.g., "language-TaskManager" or "language-taskmanager")
+            // Check class name (SillyTavern uses "custom-language-X" format)
             for (const templateName of templateNames) {
                 if (code.classList.contains(`language-${templateName}`) || 
-                    code.classList.contains(`language-${templateName.toLowerCase()}`)) {
+                    code.classList.contains(`language-${templateName.toLowerCase()}`) ||
+                    code.classList.contains(`custom-language-${templateName}`) ||
+                    code.classList.contains(`custom-language-${templateName.toLowerCase()}`) ||
+                    code.classList.contains(`custom-${templateName}`) ||
+                    code.classList.contains(`custom-${templateName.toLowerCase()}`)) {
                     try {
                         const jsonStr = code.textContent.trim();
                         const data = JSON.parse(jsonStr);
@@ -148,11 +153,20 @@
         }
     }
 
-    // Wait for page to be ready
+    // Wait for SillyTavern to be ready
+    function waitForSillyTavern() {
+        if (typeof SillyTavern !== 'undefined' && SillyTavern.getContext) {
+            init();
+        } else {
+            console.log('[OC Style Boxes] Waiting for SillyTavern...');
+            setTimeout(waitForSillyTavern, 500);
+        }
+    }
+    
     if (document.readyState === 'complete') {
-        setTimeout(init, 1000);
+        waitForSillyTavern();
     } else {
-        window.addEventListener('load', () => setTimeout(init, 1000));
+        window.addEventListener('load', waitForSillyTavern);
     }
     
 })();
