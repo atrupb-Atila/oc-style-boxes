@@ -365,6 +365,12 @@ console.log('[OC Style Boxes] Script file loaded');
 
         // Look for <pre><code class="language-XXX">
         messageElement.querySelectorAll('pre code').forEach(code => {
+            const preElement = code.closest('pre');
+            if (!preElement) return;
+
+            // Skip if already processed
+            if (preElement.dataset.ocProcessed) return;
+
             // Check class name (SillyTavern uses various formats)
             for (const templateName of templateNames) {
                 const lowerName = templateName.toLowerCase();
@@ -379,14 +385,28 @@ console.log('[OC Style Boxes] Script file loaded');
                         const data = JSON.parse(jsonStr);
                         const html = renderTemplate(customTemplates[templateName], data);
                         if (html) {
+                            // Mark as processed and hide
+                            preElement.dataset.ocProcessed = 'true';
+                            preElement.dataset.ocTemplate = templateName;
+                            preElement.dataset.ocJson = jsonStr;
+                            preElement.style.display = 'none';
+
+                            // Remove any existing rendered version
+                            const existingRender = preElement.nextElementSibling;
+                            if (existingRender && existingRender.classList.contains('oc-rendered')) {
+                                existingRender.remove();
+                            }
+
+                            // Insert rendered HTML after the hidden pre
                             const container = document.createElement('div');
+                            container.className = 'oc-rendered';
                             container.innerHTML = html;
-                            code.closest('pre').replaceWith(container);
+                            preElement.after(container);
                             console.log(`[OC Style Boxes] Rendered ${templateName}`);
                         }
                         return;
                     } catch (e) {
-                        console.error('[OC Style Boxes] Parse error:', e);
+                        // JSON not complete yet, skip silently during streaming
                     }
                 }
             }
@@ -400,15 +420,70 @@ console.log('[OC Style Boxes] Script file loaded');
                         const data = JSON.parse(jsonStr);
                         const html = renderTemplate(customTemplates[templateName], data);
                         if (html) {
+                            // Mark as processed and hide
+                            preElement.dataset.ocProcessed = 'true';
+                            preElement.dataset.ocTemplate = templateName;
+                            preElement.dataset.ocJson = jsonStr;
+                            preElement.style.display = 'none';
+
+                            // Remove any existing rendered version
+                            const existingRender = preElement.nextElementSibling;
+                            if (existingRender && existingRender.classList.contains('oc-rendered')) {
+                                existingRender.remove();
+                            }
+
+                            // Insert rendered HTML after the hidden pre
                             const container = document.createElement('div');
+                            container.className = 'oc-rendered';
                             container.innerHTML = html;
-                            code.closest('pre').replaceWith(container);
+                            preElement.after(container);
                             console.log(`[OC Style Boxes] Rendered ${templateName}`);
                         }
                         return;
                     } catch (e) {
-                        console.error('[OC Style Boxes] Parse error:', e);
+                        // JSON not complete yet, skip silently during streaming
                     }
+                }
+            }
+        });
+
+        // Also check for any pre elements that were processed but JSON changed (edit case)
+        messageElement.querySelectorAll('pre[data-oc-processed]').forEach(preElement => {
+            const code = preElement.querySelector('code');
+            if (!code) return;
+
+            const templateName = preElement.dataset.ocTemplate;
+            const oldJson = preElement.dataset.ocJson;
+            const currentText = code.textContent.trim();
+
+            // Extract current JSON
+            let currentJson = currentText;
+            if (currentText.startsWith(templateName)) {
+                currentJson = currentText.slice(templateName.length).trim();
+            }
+
+            // If JSON changed, re-render
+            if (currentJson !== oldJson) {
+                try {
+                    const data = JSON.parse(currentJson);
+                    const html = renderTemplate(customTemplates[templateName], data);
+                    if (html) {
+                        preElement.dataset.ocJson = currentJson;
+
+                        // Update the rendered version
+                        const existingRender = preElement.nextElementSibling;
+                        if (existingRender && existingRender.classList.contains('oc-rendered')) {
+                            existingRender.innerHTML = html;
+                        } else {
+                            const container = document.createElement('div');
+                            container.className = 'oc-rendered';
+                            container.innerHTML = html;
+                            preElement.after(container);
+                        }
+                        console.log(`[OC Style Boxes] Updated ${templateName}`);
+                    }
+                } catch (e) {
+                    // Invalid JSON, ignore
                 }
             }
         });
@@ -484,61 +559,55 @@ console.log('[OC Style Boxes] Script file loaded');
             // Fallback: MutationObserver to catch any DOM changes in messages
             const chatContainer = document.getElementById('chat');
             if (chatContainer) {
-                // Debounce map to prevent flickering during streaming
-                const debounceTimers = new Map();
+                // Track what we've already processed to re-apply instantly
+                const processedCache = new Map();
 
                 const observer = new MutationObserver((mutations) => {
+                    // Batch process all affected messages
+                    const affectedMessages = new Set();
+
                     for (const mutation of mutations) {
-                        if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                            // Find the closest .mes element
-                            let target = mutation.target;
-                            if (target.nodeType === Node.TEXT_NODE) {
-                                target = target.parentElement;
-                            }
-                            const mesElement = target.closest ? target.closest('.mes') : null;
-                            const mesText = mesElement ? mesElement.querySelector('.mes_text') : null;
+                        let target = mutation.target;
+                        if (target.nodeType === Node.TEXT_NODE) {
+                            target = target.parentElement;
+                        }
+                        if (!target || !target.closest) continue;
 
-                            if (mesText && mesText.querySelector('pre code')) {
-                                // Skip if message is still streaming
-                                if (mesElement.classList.contains('mes_streaming')) {
-                                    continue;
-                                }
+                        const mesElement = target.closest('.mes');
+                        if (mesElement) {
+                            affectedMessages.add(mesElement);
+                        }
+                    }
 
-                                // Debounce per message element
-                                const mesId = mesElement.getAttribute('mesid') || 'unknown';
-                                if (debounceTimers.has(mesId)) {
-                                    clearTimeout(debounceTimers.get(mesId));
-                                }
+                    // Process each affected message immediately
+                    for (const mesElement of affectedMessages) {
+                        const mesText = mesElement.querySelector('.mes_text');
+                        if (!mesText) continue;
 
-                                debounceTimers.set(mesId, setTimeout(() => {
-                                    debounceTimers.delete(mesId);
-                                    processMessage(mesText);
-                                }, 300));
-                            }
+                        const codeBlocks = mesText.querySelectorAll('pre code');
+                        if (codeBlocks.length > 0) {
+                            // Process immediately - no debounce
+                            processMessage(mesText);
                         }
                     }
                 });
 
                 observer.observe(chatContainer, {
                     childList: true,
-                    subtree: true,
-                    characterData: true
+                    subtree: true
                 });
                 console.log('[OC Style Boxes] MutationObserver active');
             }
 
-            // Also listen for streaming completion
-            if (context.eventTypes.STREAM_END) {
-                context.eventSource.on(context.eventTypes.STREAM_END, () => {
-                    console.log('[OC Style Boxes] Stream ended, processing messages');
-                    setTimeout(processAllMessages, 200);
-                });
-            }
-
+            // Also listen for streaming completion as backup
             if (context.eventTypes.GENERATION_ENDED) {
                 context.eventSource.on(context.eventTypes.GENERATION_ENDED, () => {
-                    console.log('[OC Style Boxes] Generation ended, processing messages');
-                    setTimeout(processAllMessages, 200);
+                    setTimeout(processAllMessages, 100);
+                });
+            }
+            if (context.eventTypes.GENERATION_STOPPED) {
+                context.eventSource.on(context.eventTypes.GENERATION_STOPPED, () => {
+                    setTimeout(processAllMessages, 100);
                 });
             }
 
