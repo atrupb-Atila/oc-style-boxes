@@ -357,16 +357,24 @@ console.log('[OC Style Boxes] Script file loaded');
     // CORE LOGIC
     // ============================================
 
-    function adjustScroll() {
-        // Only adjust if user is already near the bottom (auto-scrolling)
+    function adjustScroll(force = false) {
         const chat = document.getElementById('chat');
         if (!chat) return;
 
-        const isNearBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 200;
-        if (isNearBottom) {
+        const isNearBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 300;
+
+        if (force || isNearBottom) {
+            // Scroll multiple times to ensure it catches up
+            chat.scrollTop = chat.scrollHeight;
             requestAnimationFrame(() => {
                 chat.scrollTop = chat.scrollHeight;
             });
+            setTimeout(() => {
+                chat.scrollTop = chat.scrollHeight;
+            }, 50);
+            setTimeout(() => {
+                chat.scrollTop = chat.scrollHeight;
+            }, 150);
         }
     }
 
@@ -571,6 +579,18 @@ console.log('[OC Style Boxes] Script file loaded');
                     setTimeout(() => {
                         const messageElement = document.querySelector(`.mes[mesid="${messageIndex}"] .mes_text`);
                         processMessage(messageElement);
+                        adjustScroll(true); // Force scroll on swipe
+                    }, 100);
+                });
+            }
+
+            // Listen for swipe events by other names ST might use
+            if (context.eventTypes.SWIPE_CHANGED) {
+                context.eventSource.on(context.eventTypes.SWIPE_CHANGED, (messageIndex) => {
+                    setTimeout(() => {
+                        const messageElement = document.querySelector(`.mes[mesid="${messageIndex}"] .mes_text`);
+                        processMessage(messageElement);
+                        adjustScroll(true);
                     }, 100);
                 });
             }
@@ -629,6 +649,18 @@ console.log('[OC Style Boxes] Script file loaded');
                     setTimeout(processAllMessages, 100);
                 });
             }
+
+            // Fallback: Listen for clicks on swipe buttons
+            document.addEventListener('click', (e) => {
+                const swipeBtn = e.target.closest('.swipe_left, .swipe_right');
+                if (swipeBtn) {
+                    // Process after swipe animation completes
+                    setTimeout(() => {
+                        processAllMessages();
+                        adjustScroll(true);
+                    }, 250);
+                }
+            });
 
             // Process existing messages
             setTimeout(processAllMessages, 1000);
