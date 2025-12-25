@@ -450,6 +450,64 @@ console.log('[OC Style Boxes] Script file loaded');
                 setTimeout(processAllMessages, 500);
             });
 
+            // Listen for message edits/updates
+            if (context.eventTypes.MESSAGE_EDITED) {
+                context.eventSource.on(context.eventTypes.MESSAGE_EDITED, (messageIndex) => {
+                    console.log(`[OC Style Boxes] Message edited: ${messageIndex}`);
+                    setTimeout(() => {
+                        const messageElement = document.querySelector(`.mes[mesid="${messageIndex}"] .mes_text`);
+                        processMessage(messageElement);
+                    }, 100);
+                });
+            }
+
+            if (context.eventTypes.MESSAGE_UPDATED) {
+                context.eventSource.on(context.eventTypes.MESSAGE_UPDATED, (messageIndex) => {
+                    console.log(`[OC Style Boxes] Message updated: ${messageIndex}`);
+                    setTimeout(() => {
+                        const messageElement = document.querySelector(`.mes[mesid="${messageIndex}"] .mes_text`);
+                        processMessage(messageElement);
+                    }, 100);
+                });
+            }
+
+            if (context.eventTypes.MESSAGE_SWIPED) {
+                context.eventSource.on(context.eventTypes.MESSAGE_SWIPED, (messageIndex) => {
+                    console.log(`[OC Style Boxes] Message swiped: ${messageIndex}`);
+                    setTimeout(() => {
+                        const messageElement = document.querySelector(`.mes[mesid="${messageIndex}"] .mes_text`);
+                        processMessage(messageElement);
+                    }, 100);
+                });
+            }
+
+            // Fallback: MutationObserver to catch any DOM changes in messages
+            const chatContainer = document.getElementById('chat');
+            if (chatContainer) {
+                const observer = new MutationObserver((mutations) => {
+                    for (const mutation of mutations) {
+                        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                            // Find the closest .mes_text element
+                            let target = mutation.target;
+                            if (target.nodeType === Node.TEXT_NODE) {
+                                target = target.parentElement;
+                            }
+                            const mesText = target.closest ? target.closest('.mes_text') : null;
+                            if (mesText && mesText.querySelector('pre code')) {
+                                setTimeout(() => processMessage(mesText), 150);
+                            }
+                        }
+                    }
+                });
+
+                observer.observe(chatContainer, {
+                    childList: true,
+                    subtree: true,
+                    characterData: true
+                });
+                console.log('[OC Style Boxes] MutationObserver active');
+            }
+
             // Process existing messages
             setTimeout(processAllMessages, 1000);
 
