@@ -1,0 +1,11 @@
+{
+  "display_name": "OC Style Boxes",
+  "loading_order": 100,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "styles.css",
+  "author": "You",
+  "version": "1.0.0",
+  "description": "Transforms JSON code blocks into styled HTML based on template name"
+}

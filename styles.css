@@ -1,0 +1,131 @@
+/* ============================================
+   OC STYLE BOXES - CSS Templates
+   ============================================ */
+
+/* ============================================
+   TASK MANAGER (Windows 95 style)
+   ============================================ */
+
+.tm-window {
+    background: #c0b0d8;
+    border: 3px solid;
+    border-color: #f0e8ff #604878 #604878 #f0e8ff;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+    max-width: 320px;
+    font-family: "MS Sans Serif", Tahoma, Geneva, sans-serif;
+    margin: 10px 0;
+}
+
+.tm-titlebar {
+    background: linear-gradient(90deg, #7060a0 0%, #9080c0 50%, #7060a0 100%);
+    padding: 3px 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.tm-titlebar-icon {
+    width: 16px;
+    height: 16px;
+    background: #d0a0e8;
+    border: 1px solid #806090;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-content {
+    padding: 8px;
+}
+
+.tm-stat {
+    background: rgba(200, 180, 220, 0.4);
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tm-stat-icon {
+    font-size: 24px;
+    width: 36px;
+    text-align: center;
+}
+
+.tm-stat-content {
+    flex: 1;
+}
+
+.tm-stat-label {
+    font-size: 11px;
+    color: #445;
+}
+
+.tm-stat-value-big {
+    font-size: 36px;
+    font-weight: bold;
+    color: #334;
+    line-height: 1;
+}
+
+.tm-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tm-stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #334;
+    min-width: 55px;
+}
+
+.tm-stat-value small {
+    font-size: 12px;
+    font-weight: normal;
+    color: #556;
+}
+
+.tm-bar {
+    flex: 1;
+    height: 14px;
+    background: linear-gradient(180deg, #d0d0d0, #f0f0f0 30%, #e0e0e0 70%, #c0c0c0);
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.15);
+}
+
+.tm-bar-fill {
+    height: 100%;
+    transition: width 0.3s;
+}
+
+.tm-bar-fill.stress {
+    background: linear-gradient(180deg, #88d0e0, #60b8c8);
+}
+
+.tm-bar-fill.affection {
+    background: linear-gradient(180deg, #70e0f0, #50c8d8);
+}
+
+.tm-bar-fill.darkness {
+    background: linear-gradient(180deg, #98d0e0, #70b8c8);
+}
+
+
+/* ============================================
+   ADD MORE OC STYLES BELOW
+   ============================================ */
+
+/* Example:
+.another-oc-box {
+    background: #whatever;
+    ...
+}
+*/
