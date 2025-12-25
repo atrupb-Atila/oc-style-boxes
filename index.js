@@ -484,17 +484,36 @@ console.log('[OC Style Boxes] Script file loaded');
             // Fallback: MutationObserver to catch any DOM changes in messages
             const chatContainer = document.getElementById('chat');
             if (chatContainer) {
+                // Debounce map to prevent flickering during streaming
+                const debounceTimers = new Map();
+
                 const observer = new MutationObserver((mutations) => {
                     for (const mutation of mutations) {
                         if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                            // Find the closest .mes_text element
+                            // Find the closest .mes element
                             let target = mutation.target;
                             if (target.nodeType === Node.TEXT_NODE) {
                                 target = target.parentElement;
                             }
-                            const mesText = target.closest ? target.closest('.mes_text') : null;
+                            const mesElement = target.closest ? target.closest('.mes') : null;
+                            const mesText = mesElement ? mesElement.querySelector('.mes_text') : null;
+
                             if (mesText && mesText.querySelector('pre code')) {
-                                setTimeout(() => processMessage(mesText), 150);
+                                // Skip if message is still streaming
+                                if (mesElement.classList.contains('mes_streaming')) {
+                                    continue;
+                                }
+
+                                // Debounce per message element
+                                const mesId = mesElement.getAttribute('mesid') || 'unknown';
+                                if (debounceTimers.has(mesId)) {
+                                    clearTimeout(debounceTimers.get(mesId));
+                                }
+
+                                debounceTimers.set(mesId, setTimeout(() => {
+                                    debounceTimers.delete(mesId);
+                                    processMessage(mesText);
+                                }, 300));
                             }
                         }
                     }
@@ -506,6 +525,21 @@ console.log('[OC Style Boxes] Script file loaded');
                     characterData: true
                 });
                 console.log('[OC Style Boxes] MutationObserver active');
+            }
+
+            // Also listen for streaming completion
+            if (context.eventTypes.STREAM_END) {
+                context.eventSource.on(context.eventTypes.STREAM_END, () => {
+                    console.log('[OC Style Boxes] Stream ended, processing messages');
+                    setTimeout(processAllMessages, 200);
+                });
+            }
+
+            if (context.eventTypes.GENERATION_ENDED) {
+                context.eventSource.on(context.eventTypes.GENERATION_ENDED, () => {
+                    console.log('[OC Style Boxes] Generation ended, processing messages');
+                    setTimeout(processAllMessages, 200);
+                });
             }
 
             // Process existing messages
