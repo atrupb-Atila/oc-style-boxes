@@ -357,6 +357,19 @@ console.log('[OC Style Boxes] Script file loaded');
     // CORE LOGIC
     // ============================================
 
+    function adjustScroll() {
+        // Only adjust if user is already near the bottom (auto-scrolling)
+        const chat = document.getElementById('chat');
+        if (!chat) return;
+
+        const isNearBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 200;
+        if (isNearBottom) {
+            requestAnimationFrame(() => {
+                chat.scrollTop = chat.scrollHeight;
+            });
+        }
+    }
+
     function processMessage(messageElement) {
         if (!messageElement) return;
 
@@ -402,6 +415,9 @@ console.log('[OC Style Boxes] Script file loaded');
                             container.className = 'oc-rendered';
                             container.innerHTML = html;
                             preElement.after(container);
+
+                            // Adjust scroll to account for height change
+                            adjustScroll();
                             console.log(`[OC Style Boxes] Rendered ${templateName}`);
                         }
                         return;
@@ -437,6 +453,9 @@ console.log('[OC Style Boxes] Script file loaded');
                             container.className = 'oc-rendered';
                             container.innerHTML = html;
                             preElement.after(container);
+
+                            // Adjust scroll to account for height change
+                            adjustScroll();
                             console.log(`[OC Style Boxes] Rendered ${templateName}`);
                         }
                         return;
