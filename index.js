@@ -4,8 +4,6 @@
     // ============================================
     // TEMPLATES - Add your own here!
     // ============================================
-    // Each key is the code block identifier (e.g., ```TaskManager)
-    // The function receives parsed JSON and returns HTML string
     
     const templates = {
         
@@ -57,86 +55,104 @@
             </div>
         `,
         
-        // ============================================
-        // ADD MORE TEMPLATES BELOW
-        // ============================================
-        
-        // Example: Another character's status box
-        // "AnotherOC": (data) => `<div class="some-other-style">${data.whatever}</div>`,
-        
     };
 
     // ============================================
-    // CORE LOGIC - Don't need to touch this
+    // CORE LOGIC
     // ============================================
     
+    const templateNames = Object.keys(templates);
+    
     function processMessage(messageElement) {
-        // Find all code blocks
-        const codeBlocks = messageElement.querySelectorAll('pre code, code');
+        if (!messageElement) return;
         
-        codeBlocks.forEach(code => {
-            const text = code.textContent.trim();
-            
-            // Check each template name
-            for (const [templateName, templateFn] of Object.entries(templates)) {
-                // Check if code block starts with the template name
-                if (text.startsWith(templateName)) {
+        // Method 1: Look for <pre><code class="language-XXX">
+        messageElement.querySelectorAll('pre code').forEach(code => {
+            // Check class name (e.g., "language-TaskManager" or "language-taskmanager")
+            for (const templateName of templateNames) {
+                if (code.classList.contains(`language-${templateName}`) || 
+                    code.classList.contains(`language-${templateName.toLowerCase()}`)) {
                     try {
-                        // Extract JSON (everything after the template name)
-                        const jsonStr = text.slice(templateName.length).trim();
+                        const jsonStr = code.textContent.trim();
                         const data = JSON.parse(jsonStr);
-                        
-                        // Generate HTML from template
-                        const html = templateFn(data);
-                        
-                        // Replace the code block with styled HTML
+                        const html = templates[templateName](data);
                         const container = document.createElement('div');
                         container.innerHTML = html;
-                        
-                        // Replace pre>code or just code
-                        const toReplace = code.closest('pre') || code;
-                        toReplace.replaceWith(container);
-                        
+                        code.closest('pre').replaceWith(container);
+                        console.log(`[OC Style Boxes] Rendered ${templateName}`);
+                        return;
                     } catch (e) {
-                        console.error('[OC Style Boxes] Failed to parse:', e);
+                        console.error('[OC Style Boxes] Parse error:', e);
                     }
-                    break;
+                }
+            }
+            
+            // Check content starts with template name
+            const text = code.textContent.trim();
+            for (const templateName of templateNames) {
+                if (text.startsWith(templateName)) {
+                    try {
+                        const jsonStr = text.slice(templateName.length).trim();
+                        const data = JSON.parse(jsonStr);
+                        const html = templates[templateName](data);
+                        const container = document.createElement('div');
+                        container.innerHTML = html;
+                        code.closest('pre').replaceWith(container);
+                        console.log(`[OC Style Boxes] Rendered ${templateName}`);
+                        return;
+                    } catch (e) {
+                        console.error('[OC Style Boxes] Parse error:', e);
+                    }
                 }
             }
         });
     }
 
-    // Hook into SillyTavern's event system
-    function init() {
-        const context = SillyTavern.getContext();
-        
-        // Process messages when they're rendered
-        context.eventSource.on(context.eventTypes.CHARACTER_MESSAGE_RENDERED, (messageIndex) => {
-            const messageElement = document.querySelector(`.mes[mesid="${messageIndex}"] .mes_text`);
-            if (messageElement) {
-                processMessage(messageElement);
-            }
-        });
-        
-        // Also process user messages if needed
-        context.eventSource.on(context.eventTypes.USER_MESSAGE_RENDERED, (messageIndex) => {
-            const messageElement = document.querySelector(`.mes[mesid="${messageIndex}"] .mes_text`);
-            if (messageElement) {
-                processMessage(messageElement);
-            }
-        });
-        
-        // Process existing messages on load
-        document.querySelectorAll('.mes .mes_text').forEach(processMessage);
-        
-        console.log('[OC Style Boxes] Loaded!');
+    function processAllMessages() {
+        document.querySelectorAll('.mes_text').forEach(processMessage);
     }
 
-    // Wait for SillyTavern to be ready
+    function init() {
+        console.log('[OC Style Boxes] Initializing...');
+        
+        try {
+            const context = SillyTavern.getContext();
+            
+            context.eventSource.on(context.eventTypes.CHARACTER_MESSAGE_RENDERED, (messageIndex) => {
+                console.log(`[OC Style Boxes] Message rendered: ${messageIndex}`);
+                setTimeout(() => {
+                    const messageElement = document.querySelector(`.mes[mesid="${messageIndex}"] .mes_text`);
+                    processMessage(messageElement);
+                }, 100);
+            });
+            
+            context.eventSource.on(context.eventTypes.USER_MESSAGE_RENDERED, (messageIndex) => {
+                setTimeout(() => {
+                    const messageElement = document.querySelector(`.mes[mesid="${messageIndex}"] .mes_text`);
+                    processMessage(messageElement);
+                }, 100);
+            });
+            
+            context.eventSource.on(context.eventTypes.CHAT_CHANGED, () => {
+                console.log('[OC Style Boxes] Chat changed, processing all messages');
+                setTimeout(processAllMessages, 500);
+            });
+            
+            // Process existing messages
+            setTimeout(processAllMessages, 1000);
+            
+            console.log('[OC Style Boxes] Loaded successfully!');
+            
+        } catch (e) {
+            console.error('[OC Style Boxes] Failed to initialize:', e);
+        }
+    }
+
+    // Wait for page to be ready
     if (document.readyState === 'complete') {
-        init();
+        setTimeout(init, 1000);
     } else {
-        window.addEventListener('load', init);
+        window.addEventListener('load', () => setTimeout(init, 1000));
     }
     
 })();
