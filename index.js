@@ -5,73 +5,11 @@ console.log('[OC Style Boxes] Script file loaded');
     const PLUGIN_NAME = 'oc-style-boxes';
 
     // ============================================
-    // BUILT-IN TEMPLATES
-    // ============================================
-
-    const builtInTemplates = {
-        "TaskManager": {
-            html: `
-                <div class="oc-box tm-window">
-                    <div class="tm-titlebar">
-                        <div class="tm-titlebar-icon">♡</div>
-                        <span>Task Manager</span>
-                    </div>
-                    <div class="tm-content">
-                        <div class="tm-stat">
-                            <div class="tm-stat-icon">👤</div>
-                            <div class="tm-stat-content">
-                                <div class="tm-stat-label">Followers</div>
-                                <div class="tm-stat-value-big">\${data.followers ?? 0}</div>
-                            </div>
-                        </div>
-                        <div class="tm-stat">
-                            <div class="tm-stat-icon">😓</div>
-                            <div class="tm-stat-content">
-                                <div class="tm-stat-label">Stress</div>
-                                <div class="tm-stat-row">
-                                    <span class="tm-stat-value">\${data.stress ?? 0}<small>/100</small></span>
-                                    <div class="tm-bar"><div class="tm-bar-fill stress" style="width:\${data.stress ?? 0}%"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tm-stat">
-                            <div class="tm-stat-icon">💗</div>
-                            <div class="tm-stat-content">
-                                <div class="tm-stat-label">Affection</div>
-                                <div class="tm-stat-row">
-                                    <span class="tm-stat-value">\${data.affection ?? 0}<small>/100</small></span>
-                                    <div class="tm-bar"><div class="tm-bar-fill affection" style="width:\${data.affection ?? 0}%"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tm-stat">
-                            <div class="tm-stat-icon">🌑</div>
-                            <div class="tm-stat-content">
-                                <div class="tm-stat-label">Mental Darkness</div>
-                                <div class="tm-stat-row">
-                                    <span class="tm-stat-value">\${data.mentalDarkness ?? 0}<small>/100</small></span>
-                                    <div class="tm-bar"><div class="tm-bar-fill darkness" style="width:\${data.mentalDarkness ?? 0}%"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `,
-            css: '', // CSS is in styles.css for built-in
-            isBuiltIn: true
-        }
-    };
-
-    // ============================================
     // CUSTOM TEMPLATES (user-defined, persisted)
     // ============================================
 
     let customTemplates = {};
     let customStyleElement = null;
-
-    function getTemplates() {
-        return { ...builtInTemplates, ...customTemplates };
-    }
 
     function renderTemplate(templateDef, data) {
         try {
@@ -368,12 +306,6 @@ console.log('[OC Style Boxes] Script file loaded');
             return;
         }
 
-        // Check if key conflicts with built-in
-        if (builtInTemplates[key]) {
-            alert(`"${key}" is a built-in template name. Please choose a different key.`);
-            return;
-        }
-
         const editingKey = keyInput.getAttribute('data-editing');
 
         // If renaming, delete old key
@@ -392,8 +324,6 @@ console.log('[OC Style Boxes] Script file loaded');
     }
 
     function initSettingsUI() {
-        const context = SillyTavern.getContext();
-
         // Register settings
         const settingsHtml = createSettingsUI();
         const container = document.createElement('div');
@@ -430,8 +360,8 @@ console.log('[OC Style Boxes] Script file loaded');
     function processMessage(messageElement) {
         if (!messageElement) return;
 
-        const templates = getTemplates();
-        const templateNames = Object.keys(templates);
+        const templateNames = Object.keys(customTemplates);
+        if (templateNames.length === 0) return;
 
         // Look for <pre><code class="language-XXX">
         messageElement.querySelectorAll('pre code').forEach(code => {
@@ -447,7 +377,7 @@ console.log('[OC Style Boxes] Script file loaded');
                     try {
                         const jsonStr = code.textContent.trim();
                         const data = JSON.parse(jsonStr);
-                        const html = renderTemplate(templates[templateName], data);
+                        const html = renderTemplate(customTemplates[templateName], data);
                         if (html) {
                             const container = document.createElement('div');
                             container.innerHTML = html;
@@ -468,7 +398,7 @@ console.log('[OC Style Boxes] Script file loaded');
                     try {
                         const jsonStr = text.slice(templateName.length).trim();
                         const data = JSON.parse(jsonStr);
-                        const html = renderTemplate(templates[templateName], data);
+                        const html = renderTemplate(customTemplates[templateName], data);
                         if (html) {
                             const container = document.createElement('div');
                             container.innerHTML = html;

@@ -1,11 +1,3 @@
-/* ============================================
-   OC STYLE BOXES - CSS Templates
-   ============================================ */
-
-/* ============================================
-   TASK MANAGER (Windows 95 style)
-   ============================================ */
-
 .tm-window {
     background: #c0b0d8;
     border: 3px solid;
@@ -117,15 +109,3 @@
 .tm-bar-fill.darkness {
     background: linear-gradient(180deg, #98d0e0, #70b8c8);
 }
-
-
-/* ============================================
-   ADD MORE OC STYLES BELOW
-   ============================================ */
-
-/* Example:
-.another-oc-box {
-    background: #whatever;
-    ...
-}
-*/

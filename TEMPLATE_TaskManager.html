@@ -1,0 +1,45 @@
+<div class="oc-box tm-window">
+    <div class="tm-titlebar">
+        <div class="tm-titlebar-icon">♡</div>
+        <span>Task Manager</span>
+    </div>
+    <div class="tm-content">
+        <div class="tm-stat">
+            <div class="tm-stat-icon">👤</div>
+            <div class="tm-stat-content">
+                <div class="tm-stat-label">Followers</div>
+                <div class="tm-stat-value-big">${data.followers ?? 0}</div>
+            </div>
+        </div>
+        <div class="tm-stat">
+            <div class="tm-stat-icon">😓</div>
+            <div class="tm-stat-content">
+                <div class="tm-stat-label">Stress</div>
+                <div class="tm-stat-row">
+                    <span class="tm-stat-value">${data.stress ?? 0}<small>/100</small></span>
+                    <div class="tm-bar"><div class="tm-bar-fill stress" style="width:${data.stress ?? 0}%"></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="tm-stat">
+            <div class="tm-stat-icon">💗</div>
+            <div class="tm-stat-content">
+                <div class="tm-stat-label">Affection</div>
+                <div class="tm-stat-row">
+                    <span class="tm-stat-value">${data.affection ?? 0}<small>/100</small></span>
+                    <div class="tm-bar"><div class="tm-bar-fill affection" style="width:${data.affection ?? 0}%"></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="tm-stat">
+            <div class="tm-stat-icon">🌑</div>
+            <div class="tm-stat-content">
+                <div class="tm-stat-label">Mental Darkness</div>
+                <div class="tm-stat-row">
+                    <span class="tm-stat-value">${data.mentalDarkness ?? 0}<small>/100</small></span>
+                    <div class="tm-bar"><div class="tm-bar-fill darkness" style="width:${data.mentalDarkness ?? 0}%"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

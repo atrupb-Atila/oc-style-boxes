@@ -4,8 +4,7 @@
   "requires": [],
   "optional": [],
   "js": "index.js",
-  "css": "styles.css",
   "author": "You",
-  "version": "1.0.0",
-  "description": "Transforms JSON code blocks into styled HTML based on template name"
+  "version": "2.0.0",
+  "description": "Create custom styled codeblocks through a settings UI"
 }
